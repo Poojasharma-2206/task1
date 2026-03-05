@@ -1,12 +1,11 @@
 require_relative "validity"
-
-
+require 'bigdecimal'
 class Bank
   include Validity
 end
 
 b = Bank.new
-FILE = "users.txt"
+FILE = "users.CSV"
 Users = []
 
 if File.exist?(FILE)
@@ -14,11 +13,8 @@ if File.exist?(FILE)
   name, email, password, balance = data.chomp.split('|')
   Users << [name, email, password, balance.to_i,[]]
 end
-  else
-    puts "file not found"
+
 end
-
-
 
 login = nil
 current = nil
@@ -31,7 +27,7 @@ loop do
   puts "3. Banking Operations (After Login):"
   puts "4. Exit"
 
-  print " Enter number"
+  print " Enter number: "
   choice = gets.to_i
 
   case choice
@@ -64,7 +60,6 @@ loop do
       puts e.message
     end
 
-
   when 2
     puts "Enter email for login"
     email = gets.chomp
@@ -87,7 +82,6 @@ loop do
     else
       puts "login failed"
     end
-
 
   when 3
 
@@ -116,18 +110,23 @@ loop do
       
      begin
       puts "Enter amount for deposit"
-      amount = gets.to_i
+      amount = gets.to_f
       b.validate_amount(amount)
-      current[3] = current[3] + amount
+      current[3] = current[3] + (amount)
 
       current[4] << {
-        date: Time.now
+        date: Time.now,
+        type: "Deposit of amount: #{amount}"
       }
 
       puts "Deposit successful of #{amount}"
       puts "New balance become"
       puts current[3]
       
+      File.open(FILE, "w") do |file|
+        file.puts "#{current[0]}|#{current[1]}|#{current[2]}|#{current[3]}"
+     end
+
      rescue => e 
       puts e.message
      end
@@ -135,17 +134,17 @@ loop do
     when "2"
     begin
       puts "Enter amount for withdraw"
-      amount = gets.to_i
+      amount = gets.to_f
 
       b.validate_amount(amount)
-
+      
       if amount <= current[3]
         current[3] = current[3] - amount
 
         current[4] << {
-        date: Time.now
+        date: Time.now,
+        type: "Withdrawal of amount: #{amount}"
       }
-
 
         puts "Withdrawl success of amount #{amount}"
         puts "Amount after withdrawl"
@@ -153,8 +152,11 @@ loop do
 
       else
         puts "Balance is not sufficient, please check balance"
-        
       end
+
+      File.open(FILE, "w") do |file|
+        file.puts "#{current[0]}|#{current[1]}|#{current[2]}|#{current[3]}"
+     end
 
     rescue => e 
       puts e.message
@@ -163,8 +165,9 @@ loop do
     when "3"
 
      begin
-        puts "Check Balance"
+      puts "Check Balance"
       puts current[3]
+
      rescue => e
       puts e.message
      end
@@ -192,18 +195,23 @@ loop do
 
         current[2] = newpassword
         puts "password changed"
+
+        File.open(FILE, "w") do |file|
+        file.puts "#{current[0]}|#{current[1]}|#{current[2]}|#{current[3]}"
+        end
+
       rescue => e
         puts e.message   
      end
      
     when "6"
-      puts "Transection history"
+      puts "Transaction history"
 
       if current[4].empty? 
           puts "No transaction"
           else
           current[4].each do |time|
-          puts "on date: #{time[:date]}"
+          puts "on date: #{time[:date]}, type: #{time[:type]}"
         end
       end
 
@@ -215,7 +223,7 @@ loop do
 
       current[4].each do |time|
         if time[:date].strftime("%Y-%m-%d") == date
-          puts "on date: #{time[:date]}"
+          puts "on date: #{time[:date]}, type: #{time[:type]}"
           find = true
         else
            puts "no transaction on this date try again"
