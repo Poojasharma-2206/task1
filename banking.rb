@@ -1,11 +1,11 @@
 require_relative "validity"
-require 'bigdecimal'
+
 class Bank
   include Validity
 end
 
 b = Bank.new
-FILE = "users.CSV"
+FILE = "users.csv"
 Users = []
 
 if File.exist?(FILE)
@@ -43,7 +43,7 @@ loop do
 
       puts "Enter password"
       password = gets.chomp
-      b.validate_pass(password)
+      # b.validate_password(password)
 
       puts "Enter password for confirmation"
       confirm = gets.chomp
